@@ -6,9 +6,11 @@ This file creates your application.
 """
 
 from crypt import methods
+from time import clock_getres
 from app import app
 from flask import render_template, request, jsonify, send_file,  url_for
 from werkzeug.utils import secure_filename
+from flask_wtf.csrf import generate_csrf
 from flask import send_from_directory
 import os
 from .forms import UploadForm
@@ -27,12 +29,12 @@ def upload():
      # Instantiate your form class
     upload_form = UploadForm()
     # Validate file upload on submit
-    
+    print(request)
     if request.method == 'POST':
         # Get file data and save to your uploads folder
         if upload_form.validate_on_submit():
-            description = upload_form.form['description']
-            file = upload_form.file_upload.data
+            description = upload_form.description.data
+            file = upload_form.photo.data
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
             return jsonify({
@@ -42,6 +44,10 @@ def upload():
                 })
 
     return jsonify(errors=form_errors(upload_form))
+
+@app.route('/api/csrf-token', methods=['GET'])
+def get_csrf():
+ return jsonify({'csrf_token': generate_csrf()})
 
 
 ###
